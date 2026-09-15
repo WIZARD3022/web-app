@@ -1,11 +1,11 @@
 {
-    "name": "unikart",
-    "short_name": "unikart",
-    "start_url": ".",
+    "name": "UniKart - Campus Store & Printing",
+    "short_name": "UniKart",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Unikart",
+    "background_color": "#F8F9FE",
+    "theme_color": "#6A3DE8",
+    "description": "UniKart - Campus Utility Reimagined",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

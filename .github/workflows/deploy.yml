@@ -13,23 +13,43 @@ jobs:
 
     steps:
 
-      # 1. Get latest repository code
+      # 1. Checkout latest GitHub code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup SSH
+      # 2. Verify GitHub version
+      - name: Verify GitHub files
+        run: |
+          echo "Commit being deployed:"
+          git log -1 --oneline
+
+          echo "Repository:"
+          git remote -v
+
+          echo "Files:"
+          ls -la
+
+      # 3. Setup SSH
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
 
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keyscan -p "${{ secrets.VPS_PORT }}" \
             "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-      # 3. Deploy repository exactly to VPS
+      # 4. Check VPS before deployment
+      - name: Check VPS before deployment
+        run: |
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -p "${{ secrets.VPS_PORT }}" \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "echo VPS: && whoami && echo PATH: && pwd && echo FILES: && ls -la /var/www/web.uni-kart.in/"
+
+      # 5. Deploy repository
       - name: Deploy to VPS
         run: |
           rsync -avz --delete \
@@ -37,9 +57,18 @@ jobs:
             --exclude ".github/" \
             -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }}" \
             ./ \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/web.uni-kart.in/
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/web.uni-kart.in/"
 
-      # 4. Reload Nginx
+      # 6. Verify VPS after deployment
+      - name: Verify VPS after deployment
+        run: |
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -p "${{ secrets.VPS_PORT }}" \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "echo 'VPS after deployment:' && ls -la /var/www/web.uni-kart.in/"
+
+      # 7. Reload Nginx
       - name: Reload Nginx
         run: |
           ssh \
